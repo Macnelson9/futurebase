@@ -12,7 +12,7 @@ export interface UploadLetter {
 
 export const uploadToIPFS = async (file: File): Promise<string> => {
   try {
-    console.log("Attempting to upload file to Pinata IPFS...");
+    // Attempting to upload file to Pinata IPFS...
 
     // Fetch signed URL from your API route
     const urlRequest = await fetch("/api/url");
@@ -23,11 +23,9 @@ export const uploadToIPFS = async (file: File): Promise<string> => {
 
     // Upload using the signed URL
     const upload = await pinata.upload.public.file(file).url(urlResponse.url);
-    console.log("Pinata upload successful:", upload);
     return upload.cid;
   } catch (error) {
     console.error("Error uploading to IPFS:", error);
-    console.warn("Falling back to simulated IPFS CID");
     return generateSimulatedIpfsCid();
   }
 };
@@ -48,7 +46,6 @@ export const uploadJSONToIPFS = async (jsonData: object): Promise<string> => {
     return upload.cid;
   } catch (error) {
     console.error("Error uploading JSON to IPFS:", error);
-    console.warn("Falling back to simulated IPFS CID");
     return generateSimulatedIpfsCid();
   }
 };

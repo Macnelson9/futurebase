@@ -74,7 +74,6 @@ export function UserLetters() {
     try {
       const letterPromises = userLetters.map(async (letterId) => {
         const details = await getLetterDetails(Number(letterId));
-        console.log("Letter details for ID", letterId, ":", details);
 
         // Type assertion for the contract return value
         const letterDetails = details as [
@@ -130,7 +129,6 @@ export function UserLetters() {
       const key = await generateKeyFromWallet(address);
 
       // Fetch encrypted data from IPFS using the hash
-      console.log("Fetching IPFS hash:", ipfsHash);
       if (
         !ipfsHash ||
         (typeof ipfsHash === "string" && ipfsHash.trim() === "")

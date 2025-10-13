@@ -160,7 +160,6 @@ export default function DashboardPage() {
       const key = await generateKeyFromWallet(address);
 
       // Fetch encrypted data from IPFS using the hash
-      console.log("Fetching IPFS hash:", ipfsHash);
       if (
         !ipfsHash ||
         (typeof ipfsHash === "string" && ipfsHash.trim() === "")

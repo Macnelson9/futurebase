@@ -119,12 +119,9 @@ export function CreateLetterForm() {
 
       // Upload encrypted data to IPFS
       const cid = await uploadToIPFS(encryptedData);
-      console.log("Uploaded to IPFS with CID:", cid);
-      console.log("Uploaded to IPFS with typeOf CID:", typeof cid);
 
       // Create letter on contract
       const txHash = await createLetter(cid, releaseTimestamp);
-      console.log("Letter created with transaction:", txHash);
 
       toast({
         title: "Success!",

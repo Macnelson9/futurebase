@@ -16,13 +16,6 @@ export function useFutureBaseContract() {
   const createLetter = async (ipfsHash: string, releaseTime: number) => {
     if (!address) throw new Error("Wallet not connected");
 
-    console.log(
-      "Creating letter with IPFS hash:",
-      ipfsHash,
-      "and release time:",
-      releaseTime
-    );
-
     setIsLoading(true);
     try {
       const hash = await writeContractAsync({
@@ -31,7 +24,6 @@ export function useFutureBaseContract() {
         functionName: "createLetter",
         args: [ipfsHash, BigInt(releaseTime)],
       });
-      console.log("Letter creation transaction hash:", hash);
       return hash;
     } finally {
       setIsLoading(false);
@@ -88,7 +80,6 @@ export function useFutureBaseContract() {
       });
       return result;
     } catch (error) {
-      console.error("Error reading letter details:", error);
       throw error;
     }
   };

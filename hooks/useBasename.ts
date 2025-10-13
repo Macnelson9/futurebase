@@ -16,12 +16,10 @@ export function useBasename() {
 
   const registerBasename = async (name: string) => {
     // TODO: Implement basename registration
-    console.log("Registering basename:", name);
   };
 
   const resolveBasename = async (name: string) => {
     // TODO: Implement basename resolution
-    console.log("Resolving basename:", name);
     return "0x...";
   };
 
