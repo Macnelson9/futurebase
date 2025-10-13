@@ -7,6 +7,7 @@ export const config = createConfig({
   connectors: [
     coinbaseWallet({
       appName: "FutureBase",
+      preference: "smartWalletOnly",
     }),
     metaMask(),
     walletConnect({
@@ -17,4 +18,5 @@ export const config = createConfig({
     [baseSepolia.id]: http("https://sepolia.base.org/"),
     [base.id]: http("https://mainnet.base.org/"),
   },
+  ssr: true,
 });

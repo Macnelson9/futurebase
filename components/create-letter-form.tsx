@@ -91,13 +91,12 @@ export function CreateLetterForm() {
 
       const releaseTimestamp = Math.floor(releaseDateTime.getTime() / 1000);
 
-      // Check if release time is in the future
+      // Check if release time is in the future (allow same day for testing)
       const now = Math.floor(Date.now() / 1000);
-      if (releaseTimestamp <= now + 60) {
-        // MIN_RELEASE_OFFSET
+      if (releaseTimestamp <= now) {
         toast({
           title: "Error",
-          description: "Release time must be at least 1 minute in the future",
+          description: "Release time must be in the future",
           variant: "destructive",
         });
         return;
@@ -120,9 +119,12 @@ export function CreateLetterForm() {
 
       // Upload encrypted data to IPFS
       const cid = await uploadToIPFS(encryptedData);
+      console.log("Uploaded to IPFS with CID:", cid);
+      console.log("Uploaded to IPFS with typeOf CID:", typeof cid);
 
       // Create letter on contract
       const txHash = await createLetter(cid, releaseTimestamp);
+      console.log("Letter created with transaction:", txHash);
 
       toast({
         title: "Success!",
@@ -200,7 +202,11 @@ export function CreateLetterForm() {
                 mode="single"
                 selected={releaseDate}
                 onSelect={setReleaseDate}
-                disabled={(date) => date < new Date()}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
                 initialFocus
               />
             </PopoverContent>

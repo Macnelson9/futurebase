@@ -1,6 +1,12 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from "wagmi";
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useChainId,
+  useSwitchChain,
+} from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { Button } from "@/components/ui/button";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -21,15 +27,6 @@ export function ConnectWalletButton() {
         <span className="uppercase font-mono text-primary text-sm">
           {address?.slice(0, 6)}...{address?.slice(-4)}
         </span>
-        {chainId !== baseSepolia.id && (
-          <Button
-            onClick={() => switchChain({ chainId: baseSepolia.id })}
-            size="sm"
-            className="uppercase font-mono"
-          >
-            Switch to Sepolia
-          </Button>
-        )}
         <Button
           onClick={() => disconnect()}
           size="sm"
@@ -59,7 +56,7 @@ export function ConnectWalletButton() {
               <Button
                 key={connector.uid}
                 onClick={() => {
-                  connect({ connector });
+                  connect({ connector, chainId: baseSepolia.id });
                   setIsModalOpen(false);
                 }}
                 disabled={isPending}
@@ -69,6 +66,9 @@ export function ConnectWalletButton() {
                 {isPending ? "Connecting..." : `Connect ${connector.name}`}
               </Button>
             ))}
+            <div className="text-xs text-center text-muted-foreground mt-4">
+              Will connect to Base Sepolia testnet
+            </div>
           </div>
 
           <Dialog.Close asChild>

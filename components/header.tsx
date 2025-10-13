@@ -10,8 +10,8 @@ export const Header = () => {
   const pathname = usePathname();
   const isScrolled = useScrollEffect(50);
 
-  // Enable scroll blur effect on About, Contact, and Dashboard pages
-  const enableScrollBlur = ["/about", "/contact", "/dashboard"].includes(
+  // Enable scroll blur effect on About, Contact, Dashboard, and Time Travel pages
+  const enableScrollBlur = ["/about", "/contact", "/dashboard", "/time-travel"].includes(
     pathname
   );
   return (
@@ -27,7 +27,7 @@ export const Header = () => {
       )}
       <header className="flex items-center justify-between container">
         <Link href="/">
-          <Logo className="w-[100px] md:w-[120px]" />
+          <Logo className="w-[50px] md:w-[120px]" />
         </Link>
         <nav className="flex max-lg:hidden absolute left-1/2 -translate-x-1/2 items-center justify-center gap-x-10">
           {["Home", "Time Travel", "About", "Contact", "Dashboard"].map(

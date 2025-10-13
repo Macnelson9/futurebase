@@ -16,7 +16,11 @@ export function useIPFS() {
 
   const fetchFromIPFS = async (hash: string) => {
     try {
+      if (!hash || hash.trim() === "") {
+        throw new Error("IPFS hash is empty or undefined");
+      }
       const url = getIPFSUrl(hash);
+      console.log("Fetching from IPFS URL:", url);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch from IPFS: ${response.statusText}`);

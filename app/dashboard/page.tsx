@@ -6,33 +6,97 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { Avatar, Name } from "@coinbase/onchainkit/identity";
 import { base } from "viem/chains";
+import { useFutureBaseContract } from "@/hooks/useFutureBaseContract";
+import { useEffect, useState } from "react";
+
+interface LetterData {
+  id: string;
+  title: string;
+  unlockTime: Date;
+  status: "pending" | "unlocked";
+  ipfsHash: string;
+  owner: string;
+  delivered: boolean;
+  createdAt: Date;
+  isAvailable: boolean;
+}
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
-  const totalLetters = 12;
-  const unlockedLetters = 3;
-  const pendingLetters = 9;
+  const { userLetters, getLetterDetails } = useFutureBaseContract();
+  const [letters, setLetters] = useState<LetterData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentLetters = [
-    {
-      id: "1",
-      title: "Message to Future Me",
-      unlockTime: new Date(Date.now() + 86400000 * 30), // 30 days from now
-      status: "pending",
-    },
-    {
-      id: "2",
-      title: "Birthday Reminder",
-      unlockTime: new Date(Date.now() + 86400000 * 365), // 1 year from now
-      status: "pending",
-    },
-    {
-      id: "3",
-      title: "Graduation Memory",
-      unlockTime: new Date(Date.now() - 86400000 * 30), // 30 days ago
-      status: "unlocked",
-    },
-  ];
+  useEffect(() => {
+    const fetchLetters = async () => {
+      if (!address || !userLetters) return;
+
+      try {
+        type LetterDetails = {
+          releaseTime: bigint | number | string;
+          isAvailable: boolean;
+          ipfsHash: string;
+          owner: string;
+          delivered: boolean;
+          createdAt: bigint | number | string;
+        };
+
+        const letterPromises = userLetters.map(async (letterId: bigint) => {
+          const details = await getLetterDetails(Number(letterId));
+          console.log("Letter details for ID", letterId, ":", details);
+
+          // Type assertion for the contract return value
+          const letterDetails = details as [
+            Address, // owner
+            string, // ipfsHash
+            bigint, // releaseTime
+            boolean, // delivered
+            bigint, // createdAt
+            boolean // isAvailable
+          ];
+
+          // Convert to number safely, handling BigInt and other formats
+          const releaseTimeNum =
+            typeof letterDetails[2] === "bigint"
+              ? Number(letterDetails[2])
+              : Number(letterDetails[2]);
+          const createdAtNum =
+            typeof letterDetails[4] === "bigint"
+              ? Number(letterDetails[4])
+              : Number(letterDetails[4]);
+
+          return {
+            id: letterId.toString(),
+            title: `Letter #${letterId.toString()}`,
+            unlockTime: new Date(releaseTimeNum * 1000),
+            status: letterDetails[5] ? "unlocked" : "pending",
+            ipfsHash: letterDetails[1], // IPFS hash (may be empty if not released)
+            owner: letterDetails[0],
+            delivered: letterDetails[3],
+            createdAt: new Date(createdAtNum * 1000),
+            isAvailable: letterDetails[5],
+          } as LetterData;
+        });
+
+        const fetchedLetters = await Promise.all(letterPromises);
+        setLetters(fetchedLetters);
+      } catch (error) {
+        console.error("Error fetching letters:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLetters();
+  }, [address, userLetters, getLetterDetails]);
+
+  const totalLetters = letters.length;
+  const unlockedLetters = letters.filter(
+    (letter) => letter.status === "unlocked"
+  ).length;
+  const pendingLetters = totalLetters - unlockedLetters;
+
+  const recentLetters = letters.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -145,35 +209,55 @@ export default function DashboardPage() {
                 Recent Letters
               </h2>
               <div className="space-y-4">
-                {recentLetters.map((letter) => (
-                  <div
-                    key={letter.id}
-                    className="border border-primary/20 p-4 rounded-lg hover:border-primary/40 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-mono text-primary">{letter.title}</h3>
-                      <span
-                        className={`px-2 py-1 text-xs font-mono rounded ${
-                          letter.status === "unlocked"
-                            ? "bg-primary/20 text-primary"
-                            : "bg-foreground/10 text-foreground/70"
-                        }`}
-                      >
-                        {letter.status.toUpperCase()}
-                      </span>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="text-foreground/70 font-mono">
+                      Loading your letters...
                     </div>
-                    <div className="text-sm text-foreground/70 font-mono">
-                      Unlock: {letter.unlockTime.toLocaleDateString()}
-                    </div>
-                    {letter.status === "unlocked" && (
-                      <Link href={`/letters/${letter.id}`}>
-                        <Button size="sm" className="mt-2">
-                          [READ LETTER]
-                        </Button>
-                      </Link>
-                    )}
                   </div>
-                ))}
+                ) : recentLetters.length > 0 ? (
+                  recentLetters.map((letter) => (
+                    <div
+                      key={letter.id}
+                      className="border border-primary/20 p-4 rounded-lg hover:border-primary/40 transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-mono text-primary">
+                          {letter.title}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 text-xs font-mono rounded ${
+                            letter.status === "unlocked"
+                              ? "bg-primary/20 text-primary"
+                              : "bg-foreground/10 text-foreground/70"
+                          }`}
+                        >
+                          {letter.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="text-sm text-foreground/70 font-mono">
+                        Unlock:{" "}
+                        {letter.unlockTime.toLocaleDateString() !==
+                        "Invalid Date"
+                          ? letter.unlockTime.toLocaleDateString()
+                          : "Date not available"}
+                      </div>
+                      {letter.status === "unlocked" && (
+                        <Link href={`/letters/${letter.id}`}>
+                          <Button size="sm" className="mt-2">
+                            [READ LETTER]
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-foreground/70 font-mono">
+                      No letters found. Create your first time capsule!
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

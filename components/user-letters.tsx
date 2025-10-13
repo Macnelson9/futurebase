@@ -55,7 +55,11 @@ export function UserLetters() {
   const [letters, setLetters] = useState<Letter[]>([]);
   const [loadingLetters, setLoadingLetters] = useState(true);
   const [revealingLetter, setRevealingLetter] = useState<number | null>(null);
-  const [revealedContent, setRevealedContent] = useState<string>("");
+  const [revealedContents, setRevealedContents] = useState<
+    Record<number, string>
+  >({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const lettersPerPage = 2;
 
   useEffect(() => {
     if (userLetters && address) {
@@ -70,15 +74,26 @@ export function UserLetters() {
     try {
       const letterPromises = userLetters.map(async (letterId) => {
         const details = await getLetterDetails(Number(letterId));
-        console.log(details);
+        console.log("Letter details for ID", letterId, ":", details);
+
+        // Type assertion for the contract return value
+        const letterDetails = details as [
+          Address, // owner
+          string, // ipfsHash
+          bigint, // releaseTime
+          boolean, // delivered
+          bigint, // createdAt
+          boolean // isAvailable
+        ];
+
         return {
           id: Number(letterId),
-          owner: details[0] as Address,
-          ipfsHash: details[1],
-          releaseTime: Number(details[2]),
-          delivered: details[3],
-          createdAt: Number(details[4]),
-          isAvailable: details[5],
+          owner: letterDetails[0],
+          ipfsHash: letterDetails[1],
+          releaseTime: Number(letterDetails[2]),
+          delivered: letterDetails[3],
+          createdAt: Number(letterDetails[4]),
+          isAvailable: letterDetails[5],
         } as Letter;
       });
 
@@ -101,27 +116,48 @@ export function UserLetters() {
 
     setRevealingLetter(letter.id);
     try {
-      // First claim the letter to get the IPFS hash
-      await claimLetter(letter.id);
+      let ipfsHash: string;
+
+      if (letter.delivered) {
+        // For already delivered letters, use the IPFS hash from the letter object
+        ipfsHash = letter.ipfsHash;
+      } else {
+        // For new letters, claim to get the IPFS hash
+        ipfsHash = await claimLetter(letter.id);
+      }
 
       // Generate decryption key
       const key = await generateKeyFromWallet(address);
 
-      // Fetch encrypted data from IPFS
-      const encryptedData: EncryptedData = await fetchFromIPFS(letter.ipfsHash);
+      // Fetch encrypted data from IPFS using the hash
+      console.log("Fetching IPFS hash:", ipfsHash);
+      if (
+        !ipfsHash ||
+        (typeof ipfsHash === "string" && ipfsHash.trim() === "")
+      ) {
+        throw new Error("IPFS hash is empty or undefined");
+      }
+      const encryptedData: EncryptedData = await fetchFromIPFS(ipfsHash);
 
       // Decrypt the content
       const content = await decryptLetter(encryptedData, key);
 
-      setRevealedContent(content);
+      setRevealedContents((prev) => ({
+        ...prev,
+        [letter.id]: content,
+      }));
 
       toast({
-        title: "Letter Revealed!",
-        description: "Your message from the past has been decrypted",
+        title: letter.delivered ? "Letter Loaded!" : "Letter Revealed!",
+        description: letter.delivered
+          ? "Your message from the past has been loaded"
+          : "Your message from the past has been decrypted",
       });
 
-      // Refresh letters to update status
-      loadLetterDetails();
+      // Refresh letters to update status (only for new claims)
+      if (!letter.delivered) {
+        loadLetterDetails();
+      }
     } catch (error) {
       console.error("Error revealing letter:", error);
       toast({
@@ -154,9 +190,19 @@ export function UserLetters() {
     );
   }
 
+  // Calculate pagination
+  const totalPages = Math.ceil(letters.length / lettersPerPage);
+  const startIndex = (currentPage - 1) * lettersPerPage;
+  const endIndex = startIndex + lettersPerPage;
+  const currentLetters = letters.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-4">
-      {letters.map((letter) => (
+      {currentLetters.map((letter) => (
         <Card key={letter.id} className="relative overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -199,7 +245,7 @@ export function UserLetters() {
                 {format(new Date(letter.releaseTime * 1000), "PPP 'at' p")}
               </div>
 
-              {letter.isAvailable && !letter.delivered && (
+              {(letter.isAvailable || letter.delivered) && (
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
@@ -212,27 +258,64 @@ export function UserLetters() {
                       {revealingLetter === letter.id ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Revealing...
+                          {letter.delivered ? "Loading..." : "Revealing..."}
                         </>
                       ) : (
                         <>
                           <Eye className="mr-2 h-4 w-4" />
-                          Reveal Letter
+                          {letter.delivered ? "Read Letter" : "Reveal Letter"}
                         </>
                       )}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl bg-background/95 backdrop-blur-md border-border/50">
                     <DialogHeader>
                       <DialogTitle>Your Time Travel Message</DialogTitle>
                       <DialogDescription>
                         From {format(new Date(letter.createdAt * 1000), "PPP")}
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="mt-4 p-4 bg-muted rounded-lg">
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {revealedContent || "Loading your message..."}
-                      </p>
+                    <div className="mt-4 p-6 bg-muted/80 backdrop-blur-sm rounded-lg border border-border/50">
+                      {revealedContents[letter.id] ? (
+                        (() => {
+                          try {
+                            const messageData = JSON.parse(
+                              revealedContents[letter.id]
+                            );
+                            return (
+                              <div className="space-y-4">
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                    Recipient Email
+                                  </h4>
+                                  <p className="text-sm">
+                                    {messageData.recipientEmail}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                    Message
+                                  </h4>
+                                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                                    {messageData.content}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          } catch (error) {
+                            // Fallback if not JSON
+                            return (
+                              <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                                {revealedContents[letter.id]}
+                              </p>
+                            );
+                          }
+                        })()
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Loading your message...
+                        </p>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -254,6 +337,40 @@ export function UserLetters() {
           )}
         </Card>
       ))}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center space-x-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              size="sm"
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </Button>
+          ))}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

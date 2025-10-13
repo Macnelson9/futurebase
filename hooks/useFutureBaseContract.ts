@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useWriteContract, useReadContract, useAccount } from "wagmi";
-import { readContract } from "wagmi/actions";
+import { readContract, simulateContract } from "wagmi/actions";
 import { config } from "@/lib/wagmi";
 import {
   futureBaseAbi,
@@ -16,6 +16,13 @@ export function useFutureBaseContract() {
   const createLetter = async (ipfsHash: string, releaseTime: number) => {
     if (!address) throw new Error("Wallet not connected");
 
+    console.log(
+      "Creating letter with IPFS hash:",
+      ipfsHash,
+      "and release time:",
+      releaseTime
+    );
+
     setIsLoading(true);
     try {
       const hash = await writeContractAsync({
@@ -24,6 +31,7 @@ export function useFutureBaseContract() {
         functionName: "createLetter",
         args: [ipfsHash, BigInt(releaseTime)],
       });
+      console.log("Letter creation transaction hash:", hash);
       return hash;
     } finally {
       setIsLoading(false);
@@ -35,13 +43,25 @@ export function useFutureBaseContract() {
 
     setIsLoading(true);
     try {
-      const hash = await writeContractAsync({
+      // Simulate the contract call to get the return value (ipfsHash)
+      const { result } = await simulateContract(config, {
+        address: FUTURE_BASE_CONTRACT_ADDRESS,
+        abi: futureBaseAbi,
+        functionName: "claimLetter",
+        args: [BigInt(letterId)],
+        account: address,
+      });
+
+      // Execute the transaction
+      await writeContractAsync({
         address: FUTURE_BASE_CONTRACT_ADDRESS,
         abi: futureBaseAbi,
         functionName: "claimLetter",
         args: [BigInt(letterId)],
       });
-      return hash;
+
+      // Return the IPFS hash from simulation
+      return result;
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +84,7 @@ export function useFutureBaseContract() {
         abi: futureBaseAbi,
         functionName: "getLetter",
         args: [BigInt(letterId)],
+        account: address,
       });
       return result;
     } catch (error) {
