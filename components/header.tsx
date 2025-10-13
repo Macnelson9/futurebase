@@ -30,16 +30,24 @@ export const Header = () => {
           <Logo className="w-[100px] md:w-[120px]" />
         </Link>
         <nav className="flex max-lg:hidden absolute left-1/2 -translate-x-1/2 items-center justify-center gap-x-10">
-          {["Home", "About", "Contact", "Dashboard"].map((item) => (
-            <Link
-              className="uppercase inline-block font-mono text-foreground/60 hover:text-foreground/100 duration-300 transition-all ease-out hover:scale-105 hover:drop-shadow-lg relative group"
-              href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-              key={item}
-            >
-              {item}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-          ))}
+          {["Home", "Time Travel", "About", "Contact", "Dashboard"].map(
+            (item) => (
+              <Link
+                className="uppercase inline-block font-mono text-foreground/60 hover:text-foreground/100 duration-300 transition-all ease-out hover:scale-105 hover:drop-shadow-lg relative group"
+                href={
+                  item === "Home"
+                    ? "/"
+                    : item === "Time Travel"
+                    ? "/time-travel"
+                    : `/${item.toLowerCase()}`
+                }
+                key={item}
+              >
+                {item}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            )
+          )}
         </nav>
         <div className="flex items-center gap-x-4 max-lg:hidden">
           <ConnectWalletButton />

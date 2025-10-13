@@ -1,6 +1,7 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from "wagmi";
+import { baseSepolia } from "wagmi/chains";
 import { Button } from "@/components/ui/button";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState } from "react";
@@ -10,6 +11,8 @@ export function ConnectWalletButton() {
   const { address, isConnected } = useAccount();
   const { connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (isConnected) {
@@ -18,6 +21,15 @@ export function ConnectWalletButton() {
         <span className="uppercase font-mono text-primary text-sm">
           {address?.slice(0, 6)}...{address?.slice(-4)}
         </span>
+        {chainId !== baseSepolia.id && (
+          <Button
+            onClick={() => switchChain({ chainId: baseSepolia.id })}
+            size="sm"
+            className="uppercase font-mono"
+          >
+            Switch to Sepolia
+          </Button>
+        )}
         <Button
           onClick={() => disconnect()}
           size="sm"
@@ -32,14 +44,12 @@ export function ConnectWalletButton() {
   return (
     <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
       <Dialog.Trigger asChild>
-        <Button className="uppercase font-mono">
-          Connect Wallet
-        </Button>
+        <Button className="uppercase font-mono">Connect Wallet</Button>
       </Dialog.Trigger>
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background border border-primary/20 rounded-lg p-6 w-full max-w-md z-50">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-foreground text-background border border-primary/20 rounded-lg p-6 w-full max-w-md z-50">
           <Dialog.Title className="text-xl font-mono uppercase text-center mb-6">
             Connect Wallet
           </Dialog.Title>

@@ -7,11 +7,11 @@ export const Logo = ({ className }: { className?: string }) => {
 
   return (
     <div
-      className={`inline-flex relative uppercase border font-mono cursor-pointer items-center font-medium justify-center gap-2 whitespace-nowrap font-medium ease-out transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-background border-primary text-primary [&>[data-border]]:bg-primary [box-shadow:inset_0_0_54px_0px_var(--tw-shadow-color)] shadow-primary/60 hover:shadow-primary/80 hover:text-primary-foreground hover:bg-primary/10 h-16 px-6 text-base ${className}`}
+      className={`inline-flex relative uppercase border font-mono cursor-pointer items-center font-medium justify-center gap-2 whitespace-nowrap ease-out transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-background border-primary text-primary [&>[data-border]]:bg-primary [box-shadow:inset_0_0_54px_0px_var(--tw-shadow-color)] shadow-primary/60 hover:shadow-primary/80 hover:text-primary-foreground hover:bg-primary/10 h-16 px-6 text-base ${className}`}
       style={
         {
           "--poly-roundness": px(polyRoundness),
-          "clip-path":
+          clipPath:
             "polygon(var(--poly-roundness) 0, calc(100% - var(--poly-roundness)) 0, 100% 0, 100% calc(100% - var(--poly-roundness)), calc(100% - var(--poly-roundness)) 100%, 0 100%, 0 calc(100% - var(--poly-roundness)), 0 var(--poly-roundness))",
         } as React.CSSProperties
       }

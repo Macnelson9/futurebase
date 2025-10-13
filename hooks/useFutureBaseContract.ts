@@ -1,44 +1,83 @@
-import { useState } from 'react'
-// TODO: Import wagmi hooks and contract ABI
+import { useState } from "react";
+import { useWriteContract, useReadContract, useAccount } from "wagmi";
+import { readContract } from "wagmi/actions";
+import { config } from "@/lib/wagmi";
+import {
+  futureBaseAbi,
+  FUTURE_BASE_CONTRACT_ADDRESS,
+} from "@/lib/futureBaseAbi";
 
 export function useFutureBaseContract() {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const { address } = useAccount();
 
-  const sendLetter = async (hash: string, unlockTime: number) => {
-    setIsLoading(true)
+  const { writeContractAsync } = useWriteContract();
+
+  const createLetter = async (ipfsHash: string, releaseTime: number) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    setIsLoading(true);
     try {
-      // TODO: Implement contract call
-      console.log('Sending letter:', hash, unlockTime)
-      // Mock transaction
-      return { hash: '0x...' }
+      const hash = await writeContractAsync({
+        address: FUTURE_BASE_CONTRACT_ADDRESS,
+        abi: futureBaseAbi,
+        functionName: "createLetter",
+        args: [ipfsHash, BigInt(releaseTime)],
+      });
+      return hash;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const checkPendingLetters = async () => {
-    // TODO: Implement contract call
-    console.log('Checking pending letters')
-    return []
-  }
+  const claimLetter = async (letterId: number) => {
+    if (!address) throw new Error("Wallet not connected");
 
-  const viewLetter = async (letterId: string) => {
-    // TODO: Implement contract call
-    console.log('Viewing letter:', letterId)
-    return { hash: 'ipfs://Qm...', unlockTime: Date.now() }
-  }
+    setIsLoading(true);
+    try {
+      const hash = await writeContractAsync({
+        address: FUTURE_BASE_CONTRACT_ADDRESS,
+        abi: futureBaseAbi,
+        functionName: "claimLetter",
+        args: [BigInt(letterId)],
+      });
+      return hash;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const getUserLetters = async () => {
-    // TODO: Fetch user letters from contract events
-    console.log('Getting user letters')
-    return []
-  }
+  const { data: userLetters, refetch: refetchUserLetters } = useReadContract({
+    address: FUTURE_BASE_CONTRACT_ADDRESS,
+    abi: futureBaseAbi,
+    functionName: "getUserLetter",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    },
+  });
+
+  const getLetterDetails = async (letterId: number) => {
+    try {
+      const result = await readContract(config, {
+        address: FUTURE_BASE_CONTRACT_ADDRESS,
+        abi: futureBaseAbi,
+        functionName: "getLetter",
+        args: [BigInt(letterId)],
+      });
+      return result;
+    } catch (error) {
+      console.error("Error reading letter details:", error);
+      throw error;
+    }
+  };
 
   return {
-    sendLetter,
-    checkPendingLetters,
-    viewLetter,
-    getUserLetters,
-    isLoading
-  }
+    createLetter,
+    claimLetter,
+    userLetters: userLetters as bigint[] | undefined,
+    getLetterDetails,
+    refetchUserLetters,
+    isLoading,
+  };
 }

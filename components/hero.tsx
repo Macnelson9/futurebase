@@ -23,7 +23,7 @@ export function Hero() {
           them when the time is right.
         </p>
 
-        <Link className="contents max-sm:hidden" href="/#contact">
+        <Link className="contents max-sm:hidden" href="/contact">
           <Button
             className="mt-14"
             onMouseEnter={() => setHovering(true)}
@@ -32,7 +32,7 @@ export function Hero() {
             [Contact Us]
           </Button>
         </Link>
-        <Link className="contents sm:hidden" href="/#contact">
+        <Link className="contents sm:hidden" href="/contact">
           <Button
             size="sm"
             className="mt-14"

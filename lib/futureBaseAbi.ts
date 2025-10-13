@@ -1,0 +1,275 @@
+import { Address } from "viem";
+
+export const FUTURE_BASE_CONTRACT_ADDRESS =
+  "0x0565C7802a6b53ad35b7d6d4b3a0B2456fe66E5c" as Address;
+
+export const futureBaseAbi = [
+  {
+    inputs: [
+      { internalType: "address", name: "_treasury", type: "address" },
+      { internalType: "uint256", name: "_platformFeeBps", type: "uint256" },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  { inputs: [], name: "FeeTooHigh", type: "error" },
+  { inputs: [], name: "InvalidIPFSHash", type: "error" },
+  { inputs: [], name: "InvalidReleaseTime", type: "error" },
+  { inputs: [], name: "InvalidTreasuryAddress", type: "error" },
+  { inputs: [], name: "LetterHasBeenDelivered", type: "error" },
+  { inputs: [], name: "LetterNotFound", type: "error" },
+  { inputs: [], name: "LetterNotYetAvailable", type: "error" },
+  { inputs: [], name: "NotLetterOwner", type: "error" },
+  {
+    inputs: [{ internalType: "address", name: "owner", type: "address" }],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  },
+  {
+    inputs: [{ internalType: "address", name: "account", type: "address" }],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  { inputs: [], name: "ReentrancyGuardReentrantCall", type: "error" },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "letterId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "releasedTime",
+        type: "uint256",
+      },
+    ],
+    name: "LetterClaimed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "letterId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "ipfsHash",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "releaseTime",
+        type: "uint256",
+      },
+    ],
+    name: "LetterCreated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "newFeeBps",
+        type: "uint256",
+      },
+    ],
+    name: "PlatformFeeUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newTreasury",
+        type: "address",
+      },
+    ],
+    name: "TreasuryUpdated",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "MAX_RELEASE_TIME",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "MIN_RELEASE_OFFSET",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_letterId", type: "uint256" }],
+    name: "claimLetter",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "string", name: "_ipfsHash", type: "string" },
+      { internalType: "uint256", name: "_releaseTime", type: "uint256" },
+    ],
+    name: "createLetter",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_letterId", type: "uint256" }],
+    name: "getLetter",
+    outputs: [
+      { internalType: "address", name: "owner", type: "address" },
+      { internalType: "string", name: "ipfsHash", type: "string" },
+      { internalType: "uint256", name: "releaseTime", type: "uint256" },
+      { internalType: "bool", name: "delivered", type: "bool" },
+      { internalType: "uint256", name: "createdAt", type: "uint256" },
+      { internalType: "bool", name: "isAvailable", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_letterId", type: "uint256" }],
+    name: "getTimeUntilRelease",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "_user", type: "address" }],
+    name: "getUserLetter",
+    outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "_user", type: "address" }],
+    name: "getUserLetterCount",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_letterId", type: "uint256" }],
+    name: "isLetterAvailable",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "letterCounter",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "letters",
+    outputs: [
+      { internalType: "address", name: "owner", type: "address" },
+      { internalType: "string", name: "ipfsHash", type: "string" },
+      { internalType: "uint256", name: "releaseTime", type: "uint256" },
+      { internalType: "bool", name: "delivered", type: "bool" },
+      { internalType: "uint256", name: "createdAt", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_newFeeBps", type: "uint256" }],
+    name: "setPlatformFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "_newTreasury", type: "address" },
+    ],
+    name: "setTreasury",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "newOwner", type: "address" }],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "", type: "address" },
+      { internalType: "uint256", name: "", type: "uint256" },
+    ],
+    name: "userLetters",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];

@@ -1,25 +1,31 @@
 import { useState } from "react";
-// TODO: Implement with actual IPFS client (web3.storage, Pinata, etc.)
+import { uploadJSONToIPFS, getIPFSUrl } from "@/services/ipfsService";
 
 export function useIPFS() {
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadToIPFS = async (data: string) => {
+  const uploadToIPFS = async (data: object) => {
     setIsUploading(true);
     try {
-      // TODO: Implement IPFS upload
-      console.log("Uploading to IPFS:", data);
-      // Mock return - replace with actual IPFS upload
-      return "ipfs://Qm...";
+      const cid = await uploadJSONToIPFS(data);
+      return cid;
     } finally {
       setIsUploading(false);
     }
   };
 
   const fetchFromIPFS = async (hash: string) => {
-    // TODO: Implement IPFS fetch
-    console.log("Fetching from IPFS:", hash);
-    return "encrypted content";
+    try {
+      const url = getIPFSUrl(hash);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch from IPFS: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching from IPFS:", error);
+      throw error;
+    }
   };
 
   return {

@@ -132,7 +132,7 @@ export default function DashboardPage() {
                   </div>
                 )}
                 <div className="pt-4">
-                  <Link href="/write">
+                  <Link href="/time-travel">
                     <Button className="w-full">[WRITE NEW LETTER]</Button>
                   </Link>
                 </div>

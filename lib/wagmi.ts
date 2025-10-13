@@ -3,7 +3,7 @@ import { base, baseSepolia } from "wagmi/chains";
 import { coinbaseWallet, metaMask, walletConnect } from "wagmi/connectors";
 
 export const config = createConfig({
-  chains: [base, baseSepolia],
+  chains: [baseSepolia, base],
   connectors: [
     coinbaseWallet({
       appName: "FutureBase",
@@ -14,7 +14,7 @@ export const config = createConfig({
     }),
   ],
   transports: {
-    [base.id]: http("https://mainnet.base.org"),
     [baseSepolia.id]: http("https://sepolia.base.org/"),
+    [base.id]: http("https://mainnet.base.org/"),
   },
 });
