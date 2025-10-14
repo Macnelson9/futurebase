@@ -147,7 +147,7 @@ export default function ContactPage() {
                   WHAT BLOCKCHAIN DO YOU USE?
                 </h3>
                 <p className="text-sm text-foreground/70">
-                  We utilize Ethereum and other compatible networks to ensure
+                  We utilize Base and other EVM compatible networks to ensure
                   maximum security and decentralization.
                 </p>
               </div>
