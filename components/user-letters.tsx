@@ -193,7 +193,7 @@ export function UserLetters() {
       }
 
       toast({
-        title: letter.delivered ? "Letter Loaded!" : "Letter Revealed!",
+        title: letter.delivered ? "Memory Loaded!" : "Memory Revealed!",
         description: letter.delivered
           ? "Your message from the past has been loaded"
           : "Your message from the past has been decrypted",
@@ -204,11 +204,11 @@ export function UserLetters() {
         loadLetterDetails();
       }
     } catch (error) {
-      console.error("Error revealing letter:", error);
+      console.error("Error revealing memory:", error);
       toast({
         title: "Error",
         description:
-          error instanceof Error ? error.message : "Failed to reveal letter",
+          error instanceof Error ? error.message : "Failed to reveal memory",
         variant: "destructive",
       });
     } finally {
@@ -220,7 +220,7 @@ export function UserLetters() {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="ml-2">Loading your letters...</span>
+        <span className="ml-2">Loading your memories...</span>
       </div>
     );
   }
@@ -229,8 +229,8 @@ export function UserLetters() {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>You haven't created any time travel letters yet.</p>
-        <p className="text-sm mt-2">Create your first letter above!</p>
+        <p>You haven't created any time travel Memories yet.</p>
+        <p className="text-sm mt-2">Create your first memory above!</p>
       </div>
     );
   }
@@ -251,7 +251,7 @@ export function UserLetters() {
         <Card key={letter.id} className="relative overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Letter #{letter.id}</CardTitle>
+              <CardTitle className="text-lg">Memory #{letter.id}</CardTitle>
               <Badge
                 variant={
                   letter.delivered
@@ -334,19 +334,21 @@ export function UserLetters() {
                                   {messageData.recipientEmail}
                                 </p>
                               </div>
-                              <div>
-                                <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                                  Message
-                                </h4>
-                                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                                  {messageData.content}
-                                </p>
-                              </div>
+                              {messageData.content && (
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                    Message
+                                  </h4>
+                                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                                    {messageData.content}
+                                  </p>
+                                </div>
+                              )}
                               {revealedMedia[letter.id] &&
                                 messageData.mediaType && (
                                   <div>
                                     <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                                      Attached Media
+                                      Memory
                                     </h4>
                                     {messageData.mediaType.startsWith(
                                       "image/"

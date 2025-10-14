@@ -15,7 +15,7 @@ export function Hero() {
       <div className="text-center relative">
         <Pill className="mb-6">ALPHA RELEASE</Pill>
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-sentient">
-          Send Letters to <br />
+          Send Memories to <br />
           <i className="font-light">Your Future Self</i>
         </h1>
         <p className="font-mono text-sm sm:text-base text-foreground/60 text-balance mt-8 max-w-[440px] mx-auto">

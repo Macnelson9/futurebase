@@ -29,6 +29,7 @@ import { UserLetters } from "@/components/user-letters";
 
 export default function TimeTravelPage() {
   const { isConnected } = useAccount();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   if (!isConnected) {
     return (
@@ -55,10 +56,10 @@ export default function TimeTravelPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8 mt-40">
           <h1 className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-            Time Travel Letters
+            Time Travel to your Memories
           </h1>
           <p className="text-lg text-muted-foreground">
-            Send encrypted messages to your future self on the blockchain
+            Send encrypted memories to your future self on the blockchain
           </p>
         </div>
 
@@ -69,7 +70,7 @@ export default function TimeTravelPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Send className="w-5 h-5" />
-                  Create a New Letter
+                  Create a New Memory
                 </CardTitle>
                 <CardDescription>
                   Write a message that will be encrypted and stored until your
@@ -77,7 +78,7 @@ export default function TimeTravelPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CreateLetterForm />
+                <CreateLetterForm onSuccess={() => setRefreshKey(prev => prev + 1)} />
               </CardContent>
             </Card>
           </div>
@@ -88,14 +89,14 @@ export default function TimeTravelPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Eye className="w-5 h-5" />
-                  Your Time Travel Letters
+                  Your Time Travel Memories
                 </CardTitle>
                 <CardDescription>
-                  View and reveal your letters when they become available
+                  View and reveal your memories when they become available
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <UserLetters />
+                <UserLetters key={refreshKey} />
               </CardContent>
             </Card>
           </div>

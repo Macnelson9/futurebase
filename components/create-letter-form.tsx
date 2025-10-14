@@ -19,7 +19,7 @@ import { useFutureBaseContract } from "@/hooks/useFutureBaseContract";
 import { useIPFS } from "@/hooks/useIPFS";
 import { generateKeyFromWallet, encryptLetter } from "@/lib/encryption";
 
-export function CreateLetterForm() {
+export function CreateLetterForm({ onSuccess }: { onSuccess?: () => void }) {
   const { address } = useAccount();
   const { toast } = useToast();
   const { createLetter, isLoading: contractLoading } = useFutureBaseContract();
@@ -193,6 +193,9 @@ export function CreateLetterForm() {
           "PPP 'at' p"
         )}`,
       });
+
+      // Call success callback to refresh the page
+      onSuccess?.();
 
       // Reset form
       setContent("");

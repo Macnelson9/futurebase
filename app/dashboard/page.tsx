@@ -33,6 +33,16 @@ interface LetterData {
   delivered: boolean;
   createdAt: Date;
   isAvailable: boolean;
+  hasMedia?: boolean;
+  mediaType?: string;
+}
+
+interface RevealedContent {
+  content: string;
+  recipientEmail: string;
+  mediaType?: string;
+  mediaName?: string;
+  mediaData?: ArrayBuffer | string;
 }
 
 export default function DashboardPage() {
@@ -46,7 +56,7 @@ export default function DashboardPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [revealingLetter, setRevealingLetter] = useState<number | null>(null);
   const [revealedContents, setRevealedContents] = useState<
-    Record<number, string>
+    Record<number, RevealedContent>
   >({});
   const [selectedLetter, setSelectedLetter] = useState<LetterData | null>(null);
 
@@ -98,6 +108,8 @@ export default function DashboardPage() {
             delivered: letterDetails[3],
             createdAt: new Date(createdAtNum * 1000),
             isAvailable: letterDetails[5],
+            hasMedia: false, // Will be updated when revealed
+            mediaType: undefined,
           } as LetterData;
         });
 
@@ -169,12 +181,54 @@ export default function DashboardPage() {
       const encryptedData: EncryptedData = await fetchFromIPFS(ipfsHash);
 
       // Decrypt the content
-      const content = await decryptLetter(encryptedData, key);
+      const decryptedContent = await decryptLetter(encryptedData, key);
+      const content =
+        typeof decryptedContent === "string"
+          ? decryptedContent
+          : new TextDecoder().decode(decryptedContent);
+
+      let revealedContent: RevealedContent;
+
+      try {
+        const parsedData = JSON.parse(content);
+        revealedContent = {
+          content: parsedData.content || "",
+          recipientEmail: parsedData.recipientEmail || "",
+          mediaType: parsedData.mediaType,
+          mediaName: parsedData.mediaName,
+        };
+
+        // If there's media, fetch and decrypt it
+        if (parsedData.mediaCid) {
+          const encryptedMedia = await fetchFromIPFS(parsedData.mediaCid);
+          const mediaData = await decryptLetter(encryptedMedia, key);
+          revealedContent.mediaData = mediaData;
+        }
+      } catch (error) {
+        // Fallback for old format or non-JSON content
+        revealedContent = {
+          content: content,
+          recipientEmail: "",
+        };
+      }
 
       setRevealedContents((prev) => ({
         ...prev,
-        [Number(letter.id)]: content,
+        [Number(letter.id)]: revealedContent,
       }));
+
+      // Update letter metadata for media indicator
+      setLetters((prevLetters) =>
+        prevLetters.map((l) =>
+          l.id === letter.id
+            ? {
+                ...l,
+                hasMedia: !!revealedContent.mediaData,
+                mediaType: revealedContent.mediaType,
+              }
+            : l
+        )
+      );
 
       toast({
         title: letter.delivered ? "Letter Loaded!" : "Letter Revealed!",
@@ -217,6 +271,8 @@ export default function DashboardPage() {
               delivered: letterDetails[3],
               createdAt: new Date(createdAtNum * 1000),
               isAvailable: letterDetails[5],
+              hasMedia: false, // Will be updated when revealed
+              mediaType: undefined,
             } as LetterData;
           })
         );
@@ -242,7 +298,10 @@ export default function DashboardPage() {
           <div className="text-center mb-12 mt-20">
             <Pill className="mb-6">YOUR DASHBOARD</Pill>
             <h1 className="text-4xl md:text-6xl font-sentient mb-8">
-              Welcome Back, <span className="text-primary">Time Traveler</span>
+              Welcome Back{" "}
+              <span className="text-blue-600 dark:text-blue-400">
+                Time Traveler
+              </span>
             </h1>
           </div>
 
@@ -253,7 +312,7 @@ export default function DashboardPage() {
                 {totalLetters}
               </div>
               <div className="text-sm text-foreground/70 font-mono">
-                TOTAL LETTERS
+                TOTAL MEMORIES
               </div>
             </div>
             <div className="border border-primary/20 p-6 rounded-lg text-center">
@@ -334,7 +393,7 @@ export default function DashboardPage() {
                 )}
                 <div className="pt-4">
                   <Link href="/time-travel">
-                    <Button className="w-full">[WRITE NEW LETTER]</Button>
+                    <Button className="w-full">[WRITE NEW MEMORY]</Button>
                   </Link>
                 </div>
               </div>
@@ -343,13 +402,13 @@ export default function DashboardPage() {
             {/* Recent Activity */}
             <div className="space-y-6">
               <h2 className="text-2xl md:text-3xl font-sentient">
-                Recent Letters
+                Recent Memories
               </h2>
               <div className="space-y-4">
                 {loading ? (
                   <div className="text-center py-8">
                     <div className="text-foreground/70 font-mono">
-                      Loading your letters...
+                      Loading your memories...
                     </div>
                   </div>
                 ) : letters.length > 0 ? (
@@ -404,6 +463,19 @@ export default function DashboardPage() {
                                         "Invalid Date"
                                           ? letter.unlockTime.toLocaleDateString()
                                           : "Date not available"}
+                                        {letter.hasMedia && (
+                                          <span className="ml-2 text-primary">
+                                            {letter.mediaType?.startsWith(
+                                              "image/"
+                                            )
+                                              ? "🖼️"
+                                              : letter.mediaType?.startsWith(
+                                                  "video/"
+                                                )
+                                              ? "🎥"
+                                              : "📎"}
+                                          </span>
+                                        )}
                                       </div>
                                       {letter.status === "unlocked" && (
                                         <Button
@@ -414,7 +486,7 @@ export default function DashboardPage() {
                                             handleRevealLetter(letter);
                                           }}
                                         >
-                                          [READ LETTER]
+                                          [READ MEMORY]
                                         </Button>
                                       )}
                                     </div>
@@ -489,20 +561,19 @@ export default function DashboardPage() {
                       <div className="mt-4 p-6 bg-muted/80 backdrop-blur-sm rounded-lg border border-border/50">
                         {revealedContents[Number(selectedLetter.id)] ? (
                           (() => {
-                            try {
-                              const messageData = JSON.parse(
-                                revealedContents[Number(selectedLetter.id)]
-                              );
-                              return (
-                                <div className="space-y-4">
-                                  <div>
-                                    <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                                      Recipient Email
-                                    </h4>
-                                    <p className="text-sm">
-                                      {messageData.recipientEmail}
-                                    </p>
-                                  </div>
+                            const messageData =
+                              revealedContents[Number(selectedLetter.id)];
+                            return (
+                              <div className="space-y-4">
+                                <div>
+                                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                    Recipient Email
+                                  </h4>
+                                  <p className="text-sm">
+                                    {messageData.recipientEmail}
+                                  </p>
+                                </div>
+                                {messageData.content && (
                                   <div>
                                     <h4 className="font-semibold text-sm text-muted-foreground mb-1">
                                       Message
@@ -511,16 +582,55 @@ export default function DashboardPage() {
                                       {messageData.content}
                                     </p>
                                   </div>
-                                </div>
-                              );
-                            } catch (error) {
-                              // Fallback if not JSON
-                              return (
-                                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                                  {revealedContents[Number(selectedLetter.id)]}
-                                </p>
-                              );
-                            }
+                                )}
+                                {messageData.mediaData &&
+                                  messageData.mediaType && (
+                                    <div>
+                                      <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                        Media
+                                      </h4>
+                                      {messageData.mediaType.startsWith(
+                                        "image/"
+                                      ) ? (
+                                        <img
+                                          src={
+                                            typeof messageData.mediaData ===
+                                            "string"
+                                              ? messageData.mediaData
+                                              : URL.createObjectURL(
+                                                  new Blob([
+                                                    messageData.mediaData,
+                                                  ])
+                                                )
+                                          }
+                                          alt={
+                                            messageData.mediaName ||
+                                            "Attached media"
+                                          }
+                                          className="max-w-full h-auto rounded-md border"
+                                        />
+                                      ) : messageData.mediaType.startsWith(
+                                          "video/"
+                                        ) ? (
+                                        <video
+                                          src={
+                                            typeof messageData.mediaData ===
+                                            "string"
+                                              ? messageData.mediaData
+                                              : URL.createObjectURL(
+                                                  new Blob([
+                                                    messageData.mediaData,
+                                                  ])
+                                                )
+                                          }
+                                          controls
+                                          className="max-w-full h-auto rounded-md border"
+                                        />
+                                      ) : null}
+                                    </div>
+                                  )}
+                              </div>
+                            );
                           })()
                         ) : (
                           <p className="text-sm text-muted-foreground">
