@@ -18,15 +18,21 @@ export const uploadToIPFS = async (file: File): Promise<string> => {
     const urlRequest = await fetch("/api/url");
     const urlResponse = await urlRequest.json();
     if (!urlResponse.url) {
-      throw new Error("Failed to get signed URL");
+      throw new Error("Failed to get signed URL from /api/url");
     }
 
     // Upload using the signed URL
     const upload = await pinata.upload.public.file(file).url(urlResponse.url);
     return upload.cid;
   } catch (error) {
-    console.error("Error uploading to IPFS:", error);
-    return generateSimulatedIpfsCid();
+    console.error("Error uploading file to IPFS:", error);
+    // Do not return a simulated CID here. Throw so caller can handle the failure
+    // and avoid storing an invalid/fake CID in the contract.
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Unknown error uploading file to IPFS"
+    );
   }
 };
 
@@ -36,7 +42,7 @@ export const uploadJSONToIPFS = async (jsonData: object): Promise<string> => {
     const urlRequest = await fetch("/api/url");
     const urlResponse = await urlRequest.json();
     if (!urlResponse.url) {
-      throw new Error("Failed to get signed URL");
+      throw new Error("Failed to get signed URL from /api/url");
     }
 
     // Upload using the signed URL
@@ -46,7 +52,11 @@ export const uploadJSONToIPFS = async (jsonData: object): Promise<string> => {
     return upload.cid;
   } catch (error) {
     console.error("Error uploading JSON to IPFS:", error);
-    return generateSimulatedIpfsCid();
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Unknown error uploading JSON to IPFS"
+    );
   }
 };
 

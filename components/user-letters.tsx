@@ -41,6 +41,14 @@ interface Letter {
   isAvailable: boolean;
 }
 
+interface LetterData {
+  content: string;
+  recipientEmail: string;
+  mediaType?: string | null;
+  mediaName?: string | null;
+  mediaCid?: string | null;
+}
+
 export function UserLetters() {
   const { address } = useAccount();
   const { toast } = useToast();
@@ -56,7 +64,10 @@ export function UserLetters() {
   const [loadingLetters, setLoadingLetters] = useState(true);
   const [revealingLetter, setRevealingLetter] = useState<number | null>(null);
   const [revealedContents, setRevealedContents] = useState<
-    Record<number, string>
+    Record<number, LetterData>
+  >({});
+  const [revealedMedia, setRevealedMedia] = useState<
+    Record<number, string | ArrayBuffer>
   >({});
   const [currentPage, setCurrentPage] = useState(1);
   const lettersPerPage = 2;
@@ -138,12 +149,48 @@ export function UserLetters() {
       const encryptedData: EncryptedData = await fetchFromIPFS(ipfsHash);
 
       // Decrypt the content
-      const content = await decryptLetter(encryptedData, key);
+      const decryptedContent = await decryptLetter(encryptedData, key);
+
+      let letterData: LetterData;
+      let mediaBlob: Blob | null = null;
+
+      if (typeof decryptedContent === "string") {
+        // Parse JSON data
+        letterData = JSON.parse(decryptedContent);
+
+        // If there's media, fetch and decrypt it
+        if (letterData.mediaCid) {
+          const encryptedMedia: EncryptedData = await fetchFromIPFS(
+            letterData.mediaCid
+          );
+          const decryptedMedia = await decryptLetter(encryptedMedia, key);
+
+          if (decryptedMedia instanceof ArrayBuffer) {
+            mediaBlob = new Blob([decryptedMedia], {
+              type: letterData.mediaType || "application/octet-stream",
+            });
+          }
+        }
+      } else {
+        // Legacy format - just content as string
+        letterData = {
+          content: decryptedContent as string,
+          recipientEmail: "",
+        };
+      }
 
       setRevealedContents((prev) => ({
         ...prev,
-        [letter.id]: content,
+        [letter.id]: letterData,
       }));
+
+      if (mediaBlob) {
+        const mediaUrl = URL.createObjectURL(mediaBlob);
+        setRevealedMedia((prev) => ({
+          ...prev,
+          [letter.id]: mediaUrl,
+        }));
+      }
 
       toast({
         title: letter.delivered ? "Letter Loaded!" : "Letter Revealed!",
@@ -276,38 +323,55 @@ export function UserLetters() {
                     <div className="mt-4 p-6 bg-muted/80 backdrop-blur-sm rounded-lg border border-border/50">
                       {revealedContents[letter.id] ? (
                         (() => {
-                          try {
-                            const messageData = JSON.parse(
-                              revealedContents[letter.id]
-                            );
-                            return (
-                              <div className="space-y-4">
-                                <div>
-                                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                                    Recipient Email
-                                  </h4>
-                                  <p className="text-sm">
-                                    {messageData.recipientEmail}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                                    Message
-                                  </h4>
-                                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                                    {messageData.content}
-                                  </p>
-                                </div>
+                          const messageData = revealedContents[letter.id];
+                          return (
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                  Recipient Email
+                                </h4>
+                                <p className="text-sm">
+                                  {messageData.recipientEmail}
+                                </p>
                               </div>
-                            );
-                          } catch (error) {
-                            // Fallback if not JSON
-                            return (
-                              <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                                {revealedContents[letter.id]}
-                              </p>
-                            );
-                          }
+                              <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                  Message
+                                </h4>
+                                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                                  {messageData.content}
+                                </p>
+                              </div>
+                              {revealedMedia[letter.id] &&
+                                messageData.mediaType && (
+                                  <div>
+                                    <h4 className="font-semibold text-sm text-muted-foreground mb-1">
+                                      Attached Media
+                                    </h4>
+                                    {messageData.mediaType.startsWith(
+                                      "image/"
+                                    ) ? (
+                                      <img
+                                        src={revealedMedia[letter.id] as string}
+                                        alt={
+                                          messageData.mediaName ||
+                                          "Attached image"
+                                        }
+                                        className="max-w-full h-auto rounded-md border"
+                                      />
+                                    ) : messageData.mediaType.startsWith(
+                                        "video/"
+                                      ) ? (
+                                      <video
+                                        src={revealedMedia[letter.id] as string}
+                                        controls
+                                        className="max-w-full h-auto rounded-md border"
+                                      />
+                                    ) : null}
+                                  </div>
+                                )}
+                            </div>
+                          );
                         })()
                       ) : (
                         <p className="text-sm text-muted-foreground">
@@ -348,16 +412,32 @@ export function UserLetters() {
             Previous
           </Button>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "outline"}
-              size="sm"
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </Button>
-          ))}
+          {/* Sliding page numbers */}
+          {(() => {
+            const visiblePages = 5; // Number of page buttons to show at once
+            const halfVisible = Math.floor(visiblePages / 2);
+            let startPage = Math.max(1, currentPage - halfVisible);
+            let endPage = Math.min(totalPages, startPage + visiblePages - 1);
+
+            // Adjust start if we're near the end
+            if (endPage - startPage + 1 < visiblePages) {
+              startPage = Math.max(1, endPage - visiblePages + 1);
+            }
+
+            return Array.from(
+              { length: endPage - startPage + 1 },
+              (_, i) => startPage + i
+            ).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </Button>
+            ));
+          })()}
 
           <Button
             variant="outline"

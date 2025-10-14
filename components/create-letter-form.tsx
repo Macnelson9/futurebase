@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -30,16 +30,69 @@ export function CreateLetterForm() {
   const [releaseDate, setReleaseDate] = useState<Date>();
   const [releaseTime, setReleaseTime] = useState("12:00");
   const [isEncrypting, setIsEncrypting] = useState(false);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
   const isLoading = contractLoading || isUploading || isEncrypting;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "video/mp4",
+        "video/webm",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Error",
+          description: "Please select a valid image or video file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File size must be less than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setMediaFile(file);
+
+      // Create preview for images
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setMediaPreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setMediaPreview(null);
+      }
+    }
+  };
+
+  const removeMedia = () => {
+    setMediaFile(null);
+    setMediaPreview(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!content.trim()) {
+    if (!content.trim() && !mediaFile) {
       toast({
         title: "Error",
-        description: "Please enter a message for your letter",
+        description: "Please enter a message or upload media for your letter",
         variant: "destructive",
       });
       return;
@@ -107,15 +160,25 @@ export function CreateLetterForm() {
       // Generate encryption key from wallet address
       const key = await generateKeyFromWallet(address);
 
-      // Encrypt the letter with recipient email
+      let encryptedData;
+      let mediaCid = null;
+
+      if (mediaFile) {
+        // Encrypt and upload media file
+        const mediaBuffer = await mediaFile.arrayBuffer();
+        const encryptedMedia = await encryptLetter(mediaBuffer, key);
+        mediaCid = await uploadToIPFS(encryptedMedia);
+      }
+
+      // Encrypt the letter data with recipient email and media info
       const letterData = {
         content,
         recipientEmail,
+        mediaType: mediaFile?.type || null,
+        mediaName: mediaFile?.name || null,
+        mediaCid,
       };
-      const encryptedData = await encryptLetter(
-        JSON.stringify(letterData),
-        key
-      );
+      encryptedData = await encryptLetter(JSON.stringify(letterData), key);
 
       // Upload encrypted data to IPFS
       const cid = await uploadToIPFS(encryptedData);
@@ -136,6 +199,8 @@ export function CreateLetterForm() {
       setRecipientEmail("");
       setReleaseDate(undefined);
       setReleaseTime("12:00");
+      setMediaFile(null);
+      setMediaPreview(null);
     } catch (error) {
       console.error("Error creating letter:", error);
       toast({
@@ -173,6 +238,62 @@ export function CreateLetterForm() {
           rows={6}
           className="resize-none"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="media">Attach Media (Optional)</Label>
+        <div className="flex items-center gap-2">
+          <input
+            id="media"
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => document.getElementById("media")?.click()}
+            className="flex items-center gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Choose File
+          </Button>
+          {mediaFile && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={removeMedia}
+              className="text-destructive hover:text-destructive"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+        {mediaFile && (
+          <div className="text-sm text-muted-foreground">
+            {mediaFile.name} ({(mediaFile.size / 1024 / 1024).toFixed(2)} MB)
+          </div>
+        )}
+        {mediaPreview && (
+          <div className="mt-2">
+            <img
+              src={mediaPreview}
+              alt="Preview"
+              className="max-w-full h-32 object-cover rounded-md border"
+            />
+          </div>
+        )}
+        {mediaFile && mediaFile.type.startsWith("video/") && (
+          <div className="mt-2">
+            <video
+              src={URL.createObjectURL(mediaFile)}
+              className="max-w-full h-32 object-cover rounded-md border"
+              controls
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

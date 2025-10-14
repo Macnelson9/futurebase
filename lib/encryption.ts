@@ -1,6 +1,7 @@
 export interface EncryptedData {
   iv: string;
   ciphertext: string;
+  isBinary?: boolean;
 }
 
 // Generate encryption key from wallet address using PBKDF2
@@ -33,54 +34,80 @@ export async function generateKeyFromWallet(
 }
 
 export async function encryptLetter(
-  content: string,
+  content: string | ArrayBuffer,
   key: CryptoKey
 ): Promise<EncryptedData> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(content);
+  const isBinary = content instanceof ArrayBuffer;
+  const data = isBinary
+    ? new Uint8Array(content as ArrayBuffer)
+    : new TextEncoder().encode(content as string);
 
   const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV for GCM
 
-  const ciphertext = await crypto.subtle.encrypt(
+  const ciphertextBuffer = await crypto.subtle.encrypt(
     {
       name: "AES-GCM",
-      iv: iv,
+      iv: iv.buffer as ArrayBuffer,
     },
     key,
-    data
+    data.buffer as ArrayBuffer
   );
 
+  const ciphertextBytes = new Uint8Array(ciphertextBuffer);
+
   return {
-    iv: btoa(String.fromCharCode(...iv)),
-    ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
+    iv: uint8ArrayToBase64(iv),
+    ciphertext: uint8ArrayToBase64(ciphertextBytes),
+    isBinary,
   };
 }
 
 export async function decryptLetter(
   encryptedData: EncryptedData,
   key: CryptoKey
-): Promise<string> {
-  const decoder = new TextDecoder();
-
-  const iv = new Uint8Array(
-    atob(encryptedData.iv)
-      .split("")
-      .map((c) => c.charCodeAt(0))
-  );
-  const ciphertext = new Uint8Array(
-    atob(encryptedData.ciphertext)
-      .split("")
-      .map((c) => c.charCodeAt(0))
-  );
+): Promise<string | ArrayBuffer> {
+  const iv = base64ToUint8Array(encryptedData.iv);
+  const ciphertext = base64ToUint8Array(encryptedData.ciphertext);
 
   const decrypted = await crypto.subtle.decrypt(
     {
       name: "AES-GCM",
-      iv: iv,
+      iv: iv.buffer as ArrayBuffer,
     },
     key,
-    ciphertext
+    ciphertext.buffer as ArrayBuffer
   );
 
-  return decoder.decode(decrypted);
+  if (encryptedData.isBinary) {
+    return decrypted;
+  } else {
+    return new TextDecoder().decode(decrypted);
+  }
+}
+
+// Helper: convert Uint8Array -> base64 safely in chunks to avoid large argument lists
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  const chunkSize = 0x8000; // 32KB chunks
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    // Convert chunk to string
+    let chunkStr = "";
+    for (let j = 0; j < chunk.length; j++) {
+      chunkStr += String.fromCharCode(chunk[j]);
+    }
+    binary += chunkStr;
+  }
+  return btoa(binary);
+}
+
+// Helper: convert base64 -> Uint8Array
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
