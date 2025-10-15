@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ConnectWalletButton } from "./connect-wallet";
 import { ThemeSwitcher } from "./theme-switcher";
+import { Logo } from "./logo";
 
 interface MobileMenuProps {
   className?: string;
@@ -62,6 +63,9 @@ export const MobileMenu = ({ className }: MobileMenuProps) => {
           <Dialog.Title className="sr-only">Menu</Dialog.Title>
 
           <nav className="flex flex-col space-y-6 container mx-auto">
+            {/* <div className="mb-8">
+              <Logo className="w-[200px]" />
+            </div> */}
             {menuItems.map((item) => (
               <Link
                 key={item.name}
