@@ -19,7 +19,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Eye, Clock, CheckCircle, Loader2 } from "lucide-react";
+import {
+  Eye,
+  Clock,
+  CheckCircle,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useFutureBaseContract } from "@/hooks/useFutureBaseContract";
@@ -174,7 +181,7 @@ export function UserLetters() {
       } else {
         // Legacy format - just content as string
         letterData = {
-          content: decryptedContent as string,
+          content: decryptedContent as unknown as string,
           recipientEmail: "",
         };
       }
@@ -404,14 +411,17 @@ export function UserLetters() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2 mt-6">
+        <div className="flex flex-wrap justify-center items-center gap-2 mt-6">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
+            aria-label="Previous page"
+            title="Previous"
+            className="w-8 h-8 p-0"
           >
-            Previous
+            <ChevronLeft className="w-4 h-4" />
           </Button>
 
           {/* Sliding page numbers */}
@@ -435,8 +445,11 @@ export function UserLetters() {
                 variant={currentPage === page ? "default" : "outline"}
                 size="sm"
                 onClick={() => handlePageChange(page)}
+                className="w-8 h-8 p-0 text-sm"
+                aria-label={`Page ${page}`}
+                title={`Page ${page}`}
               >
-                {page}
+                <span className="inline-block text-center w-full">{page}</span>
               </Button>
             ));
           })()}
@@ -446,8 +459,11 @@ export function UserLetters() {
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
+            aria-label="Next page"
+            title="Next"
+            className="w-8 h-8 p-0"
           >
-            Next
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       )}

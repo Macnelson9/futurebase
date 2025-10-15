@@ -299,7 +299,7 @@ export function CreateLetterForm({ onSuccess }: { onSuccess?: () => void }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         <div className="space-y-2">
           <Label>Release Date</Label>
           <Popover>
@@ -328,6 +328,9 @@ export function CreateLetterForm({ onSuccess }: { onSuccess?: () => void }) {
                   today.setHours(0, 0, 0, 0);
                   return date < today;
                 }}
+                captionLayout="dropdown-buttons"
+                fromYear={new Date().getFullYear()}
+                toYear={new Date().getFullYear() + 50}
                 initialFocus
               />
             </PopoverContent>

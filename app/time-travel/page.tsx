@@ -63,7 +63,7 @@ export default function TimeTravelPage() {
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 grid-cols-1 md:grid-cols-2">
           {/* Create Letter Section */}
           <div className="space-y-6">
             <Card>
@@ -78,7 +78,9 @@ export default function TimeTravelPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CreateLetterForm onSuccess={() => setRefreshKey(prev => prev + 1)} />
+                <CreateLetterForm
+                  onSuccess={() => setRefreshKey((prev) => prev + 1)}
+                />
               </CardContent>
             </Card>
           </div>

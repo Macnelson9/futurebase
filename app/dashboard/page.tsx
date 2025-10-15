@@ -339,7 +339,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {/* User Profile */}
             <div className="space-y-6">
               <h2 className="text-2xl md:text-3xl font-sentient">
@@ -497,23 +497,6 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Navigation Dots */}
-                      {totalSlides > 1 && (
-                        <div className="flex justify-center space-x-2 mt-4">
-                          {Array.from({ length: totalSlides }, (_, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setCurrentSlide(index)}
-                              className={`w-2 h-2 rounded-full transition-colors ${
-                                index === currentSlide
-                                  ? "bg-primary"
-                                  : "bg-primary/30"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      )}
-
                       {/* Navigation Arrows */}
                       {totalSlides > 1 && (
                         <div className="flex justify-between items-center mt-4">
@@ -521,15 +504,28 @@ export default function DashboardPage() {
                             variant="default"
                             size="sm"
                             onClick={prevSlide}
-                            className="px-3"
+                            className="px-2"
                           >
                             ‹
                           </Button>
+                          <div className="flex justify-center space-x-1 flex-1">
+                            {Array.from({ length: totalSlides }, (_, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setCurrentSlide(index)}
+                                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                                  index === currentSlide
+                                    ? "bg-primary"
+                                    : "bg-primary/30"
+                                }`}
+                              />
+                            ))}
+                          </div>
                           <Button
                             variant="default"
                             size="sm"
                             onClick={nextSlide}
-                            className="px-3"
+                            className="px-2"
                           >
                             ›
                           </Button>
