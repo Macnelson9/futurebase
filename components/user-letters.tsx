@@ -258,7 +258,9 @@ export function UserLetters() {
         <Card key={letter.id} className="relative overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Memory #{letter.id}</CardTitle>
+              <CardTitle className="text-lg">
+                Memory #{letters.indexOf(letter) + 1}
+              </CardTitle>
               <Badge
                 variant={
                   letter.delivered

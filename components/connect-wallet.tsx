@@ -10,7 +10,7 @@ import {
 import { baseSepolia } from "wagmi/chains";
 import { Button } from "@/components/ui/button";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 export function ConnectWalletButton() {
@@ -20,6 +20,17 @@ export function ConnectWalletButton() {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Track unique users who connect wallets
+  useEffect(() => {
+    if (isConnected && address) {
+      const connectedUsers = JSON.parse(localStorage.getItem('connectedUsers') || '[]');
+      if (!connectedUsers.includes(address)) {
+        connectedUsers.push(address);
+        localStorage.setItem('connectedUsers', JSON.stringify(connectedUsers));
+      }
+    }
+  }, [isConnected, address]);
 
   if (isConnected) {
     return (

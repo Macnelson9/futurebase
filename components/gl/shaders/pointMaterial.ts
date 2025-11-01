@@ -113,9 +113,9 @@ export class DofPointsMaterial extends THREE.ShaderMaterial {
         // Calculate sparkle brightness multiplier
         float sparkleBrightness = sparkleNoise(vInitialPosition, uTime);
         
-        float alpha = (1.04 - clamp(vDistance, 0.0, 1.0)) * clamp(smoothstep(-0.5, 0.25, vPosY), 0.0, 1.0) * uOpacity * revealMask * uRevealProgress * sparkleBrightness;
+        float alpha = (1.04 - clamp(vDistance, 0.0, 1.0)) * clamp(smoothstep(-0.5, 0.25, vPosY), 0.0, 1.0) * uOpacity * revealMask * uRevealProgress * sparkleBrightness * 1.5;
 
-        vec3 baseBlue = vec3(0.0, 0.322, 1.0); // #0052FF in RGB
+        vec3 baseBlue = vec3(0.0, 0.4, 1.0); // Brighter blue for light mode visibility
         
         // Add subtle brightness variation based on sparkle
         vec3 particleColor = baseBlue * (0.8 + sparkleBrightness * 0.4);

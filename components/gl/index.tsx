@@ -38,8 +38,8 @@ export const GL = ({ hovering }: { hovering: boolean }) => {
       options: [256, 512, 1024],
     },
     showDebugPlane: { value: false },
-    vignetteDarkness: { value: 1.5, min: 0, max: 2, step: 0.1 },
-    vignetteOffset: { value: 0.4, min: 0, max: 2, step: 0.1 },
+    vignetteDarkness: { value: 2.0, min: 0, max: 2, step: 0.1 },
+    vignetteOffset: { value: 0.3, min: 0, max: 2, step: 0.1 },
     useManualTime: { value: false },
     manualTime: { value: 0, min: 0, max: 50, step: 0.01 },
   });

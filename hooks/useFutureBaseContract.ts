@@ -84,6 +84,12 @@ export function useFutureBaseContract() {
     }
   };
 
+  const { data: totalMemories } = useReadContract({
+    address: FUTURE_BASE_CONTRACT_ADDRESS,
+    abi: futureBaseAbi,
+    functionName: "letterCounter",
+  });
+
   return {
     createLetter,
     claimLetter,
@@ -91,5 +97,6 @@ export function useFutureBaseContract() {
     getLetterDetails,
     refetchUserLetters,
     isLoading,
+    totalMemories: totalMemories as bigint | undefined,
   };
 }

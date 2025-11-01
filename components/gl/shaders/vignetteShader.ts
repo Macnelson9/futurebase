@@ -33,7 +33,7 @@ export const VignetteShader = {
         // In light mode, add white to edges instead of darkening
         vec3 white = vec3(1.0);
         float lightVignette = smoothstep(offset, offset + darkness, dist);
-        gl_FragColor = vec4(mix(texel.rgb, white, lightVignette * 0.3), texel.a);
+        gl_FragColor = vec4(mix(texel.rgb, white, lightVignette * 0.6), texel.a);
       } else {
         // Dark mode: darken edges
         gl_FragColor = vec4(texel.rgb * vignette, texel.a);

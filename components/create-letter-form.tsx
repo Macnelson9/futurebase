@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { parse, format, isValid } from "date-fns";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon, Loader2, Upload, X } from "lucide-react";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFutureBaseContract } from "@/hooks/useFutureBaseContract";
@@ -27,13 +28,53 @@ export function CreateLetterForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const [content, setContent] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
-  const [releaseDate, setReleaseDate] = useState<Date>();
+  const [releaseDate, setReleaseDate] = useState<Date | undefined>();
   const [releaseTime, setReleaseTime] = useState("12:00");
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
   const isLoading = contractLoading || isUploading || isEncrypting;
+
+  // Helper to format date for the input as DD/MM/YYYY
+  const formatDateForInput = (d?: Date) => (d ? format(d, "dd/MM/yyyy") : "");
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    // Allow partial typing but attempt to parse when full form filled
+    const parsed = parse(raw, "dd/MM/yyyy", new Date());
+    if (isValid(parsed) && raw.replace(/\D/g, "").length === 8) {
+      setReleaseDate(parsed);
+    } else {
+      // keep controlled input but unset releaseDate until valid
+      setReleaseDate(undefined);
+    }
+    // store raw value in local state if you want to show exact typed text
+    setDateInput(raw);
+  };
+
+  const handleDateInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const parsed = parse(raw, "dd/MM/yyyy", new Date());
+    if (isValid(parsed)) {
+      setReleaseDate(parsed);
+      setDateInput(format(parsed, "dd/MM/yyyy"));
+    } else {
+      // reset to previous valid formatted date or empty
+      setDateInput(formatDateForInput(releaseDate));
+    }
+  };
+
+  // local input state so user can type partial date without losing chars
+  const [dateInput, setDateInput] = useState<string>(
+    formatDateForInput(releaseDate)
+  );
+
+  // If calendar selection is used elsewhere, keep it synced
+  const handleCalendarSelect = (d: Date | undefined) => {
+    setReleaseDate(d);
+    setDateInput(formatDateForInput(d));
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,6 +129,14 @@ export function CreateLetterForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // ensure releaseDate is valid before proceeding
+    if (!releaseDate) {
+      toast({
+        title: "Invalid date",
+        description: "Please enter a valid date in DD/MM/YYYY format",
+      });
+      return;
+    }
 
     if (!content.trim() && !mediaFile) {
       toast({
@@ -218,7 +267,7 @@ export function CreateLetterForm({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="recipientEmail">Recipient Email</Label>
         <input
@@ -300,51 +349,48 @@ export function CreateLetterForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="space-y-2">
+        {/* Date input (typed) */}
+        <div>
           <Label>Release Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !releaseDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {releaseDate ? format(releaseDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-auto p-0 backdrop-blur-md bg-background/80 border border-primary/20"
-              align="start"
-            >
-              <Calendar
-                mode="single"
-                selected={releaseDate}
-                onSelect={setReleaseDate}
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  return date < today;
-                }}
-                captionLayout="dropdown-buttons"
-                fromYear={new Date().getFullYear()}
-                toYear={new Date().getFullYear() + 50}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="DD/MM/YYYY"
+              value={dateInput}
+              onChange={handleDateInputChange}
+              onBlur={handleDateInputBlur}
+              inputMode="numeric"
+              className="w-full"
+              aria-label="Release date in DD/MM/YYYY"
+            />
+            {/* optional calendar toggle — keeps behavior for users who prefer calendar */}
+            <div className="hidden sm:block">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline">📅</Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="p-0 backdrop-blur-md bg-background/80 border border-primary/20"
+                >
+                  <Calendar
+                    mode="single"
+                    selected={releaseDate}
+                    onSelect={(d) => handleCalendarSelect(d ?? undefined)}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="time">Release Time</Label>
-          <input
-            id="time"
+        {/* Time input remains same */}
+        <div>
+          <Label>Release Time</Label>
+          <Input
             type="time"
             value={releaseTime}
             onChange={(e) => setReleaseTime(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full mt-2 mb-2"
           />
         </div>
       </div>

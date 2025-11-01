@@ -76,7 +76,7 @@ export default function DashboardPage() {
 
         const letterPromises = userLetters.map(async (letterId: bigint) => {
           const details = await getLetterDetails(Number(letterId));
-          console.log("Letter details for ID", letterId, ":", details);
+          // console.log("Letter details for ID", letterId, ":", details);
 
           // Type assertion for the contract return value
           const letterDetails = details as [
@@ -100,7 +100,7 @@ export default function DashboardPage() {
 
           return {
             id: letterId.toString(),
-            title: `Letter #${letterId.toString()}`,
+            title: `Memory #${userLetters.indexOf(letterId) + 1}`, // Updated title
             unlockTime: new Date(releaseTimeNum * 1000),
             status: letterDetails[3] ? "unlocked" : "pending",
             ipfsHash: letterDetails[1], // IPFS hash (may be empty if not released)
@@ -263,7 +263,7 @@ export default function DashboardPage() {
 
             return {
               id: letterId.toString(),
-              title: `Letter #${letterId.toString()}`,
+              title: `Memory #${userLetters!.indexOf(letterId) + 1}`,
               unlockTime: new Date(releaseTimeNum * 1000),
               status: letterDetails[3] ? "unlocked" : "pending",
               ipfsHash: letterDetails[1],

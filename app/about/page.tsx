@@ -20,13 +20,13 @@ export default function AboutPage() {
               </h2>
               <p className="text-foreground/80 leading-relaxed">
                 FutureBase is a revolutionary platform that allows you to send
-                messages to your future self, securely stored on the blockchain.
-                Preserve your thoughts, dreams, and important moments that will
-                be unlocked when the time is right.
+                memories, securely stored on the blockchain, to your future
+                self. <br></br>Preserve your thoughts, dreams, and important
+                moments that will be unlocked when the time is right.
               </p>
               <p className="text-foreground/80 leading-relaxed">
                 Using cutting-edge encryption and decentralized technology, we
-                ensure your messages remain private and tamper-proof until their
+                ensure your memories remain private and tamper-proof until their
                 designated unlock date.
               </p>
             </div>
@@ -37,27 +37,27 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4">
                 <div className="border border-primary/20 p-4 rounded-lg">
-                  <h3 className="font-mono text-primary mb-2">1. WRITE</h3>
+                  <h3 className="font-mono text-primary mb-2">1. CREATE</h3>
                   <p className="text-sm text-foreground/70">
-                    Compose your message with a future unlock date
+                    Create your memory with a future unlock date
                   </p>
                 </div>
                 <div className="border border-primary/20 p-4 rounded-lg">
                   <h3 className="font-mono text-primary mb-2">2. ENCRYPT</h3>
                   <p className="text-sm text-foreground/70">
-                    Your message is encrypted and stored on the blockchain
+                    Your memory is encrypted and stored on the blockchain
                   </p>
                 </div>
                 <div className="border border-primary/20 p-4 rounded-lg">
                   <h3 className="font-mono text-primary mb-2">3. WAIT</h3>
                   <p className="text-sm text-foreground/70">
-                    Time passes, your message remains secure
+                    Time passes, your memory remains secure
                   </p>
                 </div>
                 <div className="border border-primary/20 p-4 rounded-lg">
                   <h3 className="font-mono text-primary mb-2">4. UNLOCK</h3>
                   <p className="text-sm text-foreground/70">
-                    Your future self receives the message at the perfect moment
+                    Your future self receives the memory at the perfect moment
                   </p>
                 </div>
               </div>

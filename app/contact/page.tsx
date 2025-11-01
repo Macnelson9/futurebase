@@ -41,7 +41,9 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-mono text-primary">TWITTER</h3>
-                      <p className="text-foreground/70">@futurebase</p>
+                      <p className="text-foreground/70">
+                        <a href="https://x.com/futurebase_">@futurebase_</a>
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -134,10 +136,10 @@ export default function ContactPage() {
               </div>
               <div className="border border-primary/20 p-6 rounded-lg">
                 <h3 className="font-mono text-primary mb-4">
-                  CAN I DELETE A MESSAGE?
+                  CAN I DELETE A MEMORY?
                 </h3>
                 <p className="text-sm text-foreground/70">
-                  Once sent, messages cannot be deleted due to the immutable
+                  Once sent, memories cannot be deleted due to the immutable
                   nature of blockchain technology. This ensures the integrity of
                   your time capsules.
                 </p>

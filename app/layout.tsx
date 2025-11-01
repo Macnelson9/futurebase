@@ -11,10 +11,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "FutureBase",
-  description: "Send encrypted letters to your future self on the blockchain",
+  description: "Send encrypted memories to your future self on the blockchain",
   generator: "v0.app",
 };
-
 
 export default function RootLayout({
   children,
