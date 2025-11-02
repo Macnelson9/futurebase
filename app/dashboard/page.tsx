@@ -76,7 +76,7 @@ export default function DashboardPage() {
 
         const letterPromises = userLetters.map(async (letterId: bigint) => {
           const details = await getLetterDetails(Number(letterId));
-          // console.log("Letter details for ID", letterId, ":", details);
+          console.log("Letter details for ID", letterId, ":", details);
 
           // Type assertion for the contract return value
           const letterDetails = details as [

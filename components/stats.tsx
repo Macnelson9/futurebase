@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useFutureBaseContract } from "@/hooks/useFutureBaseContract";
+import { useGraphQLStats } from "@/hooks/useGraphQL";
 import { Button } from "@/components/ui/button";
 
 interface StatsProps {
@@ -10,8 +11,11 @@ interface StatsProps {
 
 export function Stats({ onHoverChange }: StatsProps) {
   const { totalMemories } = useFutureBaseContract();
+  const { data: graphQLData, isLoading: graphQLLoading } = useGraphQLStats();
   const [totalUsers, setTotalUsers] = useState<number>(0);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const totalActiveUsers = graphQLData?.stats?.[0]?.totalActiveUsers || 0;
 
   useEffect(() => {
     // Simulate loading stats after page load
@@ -72,9 +76,11 @@ export function Stats({ onHoverChange }: StatsProps) {
           onFocus={() => onHoverChange?.(true)}
           onBlur={() => onHoverChange?.(false)}
         >
-          <span className="text-2xl font-bold text-primary">{totalUsers}</span>
+          <span className="text-2xl font-bold text-primary">
+            {graphQLLoading ? "..." : totalActiveUsers}
+          </span>
         </Button>
-        <p className="text-sm text-muted-foreground mt-2">Total Users</p>
+        <p className="text-sm text-muted-foreground mt-2">Active Users</p>
       </div>
     </div>
   );
