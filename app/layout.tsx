@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: "FutureBase",
   description: "Send encrypted memories to your future self on the blockchain",
   generator: "v0.app",
+  icons: {
+    icon: "/futurebase-logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -21,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistMono.variable} antialiased`}
         suppressHydrationWarning
