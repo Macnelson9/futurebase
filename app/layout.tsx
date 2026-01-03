@@ -26,14 +26,14 @@ export async function generateMetadata(): Promise<Metadata> {
       "base:app_id": "6958f629c63ad876c9081ee5",
       "fc:miniapp": JSON.stringify({
         version: "next",
-        imageUrl: `${appUrl}/og-image.png`,
+        imageUrl: `${appUrl}/futurebase-logo.png`,
         button: {
           title: "Launch FutureBase",
           action: {
             type: "launch_miniapp",
             name: "FutureBase",
             url: appUrl,
-            splashImageUrl: `${appUrl}/splash-image.png`,
+            splashImageUrl: `${appUrl}/futurebase-logo.png`,
             splashBackgroundColor: "#000000",
           },
         },
