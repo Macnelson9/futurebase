@@ -23,6 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       icon: "/futurebase-logo.png",
     },
     other: {
+      "base:app_id": "6958f629c63ad876c9081ee5",
       "fc:miniapp": JSON.stringify({
         version: "next",
         imageUrl: `${appUrl}/og-image.png`,
