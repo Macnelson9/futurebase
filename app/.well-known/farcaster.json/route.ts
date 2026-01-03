@@ -1,0 +1,49 @@
+function withValidProperties(
+  properties: Record<string, undefined | string | string[]>
+) {
+  return Object.fromEntries(
+    Object.entries(properties).filter(([_, value]) =>
+      Array.isArray(value) ? value.length > 0 : !!value
+    )
+  );
+}
+
+export async function GET() {
+  const URL = process.env.NEXT_PUBLIC_URL as string;
+
+  const manifest = {
+    accountAssociation: {
+      header: "",
+      payload: "",
+      signature: "",
+    },
+    miniapp: withValidProperties({
+      version: "1",
+      name: "FutureBase",
+      homeUrl: URL,
+      iconUrl: `${URL}/futurebase-logo.png`,
+      splashImageUrl: `${URL}/splash-image.png`,
+      splashBackgroundColor: "#000000",
+      webhookUrl: "",
+      subtitle: "Send memories to your future self",
+      description:
+        "Send encrypted time-locked messages to your future self on the blockchain. Control when your memories are revealed.",
+      screenshotUrls: [
+        `${URL}/screenshots/1.png`,
+        `${URL}/screenshots/2.png`,
+        `${URL}/screenshots/3.png`,
+      ],
+      primaryCategory: "social",
+      tags: ["messaging", "future", "blockchain", "encrypted"],
+      heroImageUrl: `${URL}/og-image.png`,
+      tagline: "Remember your future",
+      ogTitle: "FutureBase",
+      ogDescription:
+        "Send encrypted time-locked messages to your future self on the blockchain.",
+      ogImageUrl: `${URL}/og-image.png`,
+      noindex: "false",
+    }),
+  };
+
+  return Response.json(manifest);
+}
